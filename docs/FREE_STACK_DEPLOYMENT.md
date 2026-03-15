@@ -8,11 +8,28 @@ This guide followed the "Zero-Cost Staging" strategy using Vercel, Koyeb, Render
 
 ---
 
-## 1. Supabase (PostgreSQL)
-1. Go to **[supabase.com](https://supabase.com)** → "New project".
-2. Set name and database password.
-3. Go to **Settings → Database** → copy the **Connection string** (URI format).
-4. Save this for the `DATABASE_URL` in Koyeb.
+## 1. Supabase (PostgreSQL) — The Database
+Supabase provides a hosted PostgreSQL database. We will use it to store your trades, positions, and user data.
+
+### Step-by-Step setup:
+1. **Sign Up**: Go to **[supabase.com](https://supabase.com)** and click **"Start your project"**. Sign in using your **GitHub account**.
+2. **Create Organization**: If it's your first time, follow the prompts to create a free organization.
+3. **New Project**:
+   - Click the **"New Project"** button.
+   - **Name**: Enter `ai-trading-platform`.
+   - **Database Password**: Click **"Generate a password"** and **SAVE IT IMMEDIATELY** in a safe place. You will need this for the connection string.
+   - **Region**: Select the region closest to you (e.g., `South Asia (Mumbai)` or `Southeast Asia (Singapore)`).
+   - **Pricing Plan**: Ensure **"Free"** is selected.
+   - Click **"Create new project"**.
+4. **Wait for Provisioning**: It will take about 1-2 minutes for the database to be ready.
+5. **Get Connection String**:
+   - Once the project is ready, click on the **"Settings"** icon (gear icon at the bottom of the left sidebar).
+   - Click on **"Database"** under the "Project Settings" menu.
+   - Scroll down to the **"Connection string"** section.
+   - Select the **"URI"** tab.
+   - You will see a string like: `postgresql://postgres:[YOUR-PASSWORD]@db.xxxx.supabase.co:5432/postgres`
+   - **Copy this string**. Replace `[YOUR-PASSWORD]` with the password you generated in step 3.
+6. **Save**: Keep this full string ready; you will paste it as `DATABASE_URL` when we set up the Koyeb backend.
 
 ## 2. Upstash (Redis)
 1. Go to **[upstash.io](https://upstash.io)** → "Create Database".
