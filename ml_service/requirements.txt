@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+yfinance
+pandas
+numpy
+joblib
+apscheduler
+torch
+scikit-learn
+joblib
+pandas_ta
+xgboost
+apscheduler

@@ -1,0 +1,15 @@
+fastapi
+uvicorn==0.23.2
+yfinance==0.2.31
+sqlalchemy==2.0.23
+# Note: we are purposefully pinning rough versions for stability
+psycopg2-binary
+pydantic
+python-jose
+passlib[bcrypt]
+pandas
+numpy
+pandas-ta
+redis
+httpx
+websockets
