@@ -13,8 +13,9 @@ const SCFG = {
 };
 
 const APP_CONFIG = {
-  BACKEND_URL: process.env.REACT_APP_BACKEND_URL || "http://localhost:8000",
-  ML_SERVICE_URL: process.env.REACT_APP_ML_SERVICE_URL || "http://localhost:8001"
+  API_URL: process.env.REACT_APP_API_URL || "http://localhost:8000",
+  ML_SERVICE_URL: process.env.REACT_APP_ML_SERVICE_URL || "http://localhost:8001",
+  WS_URL: process.env.REACT_APP_WS_URL || "ws://localhost:8000/ws"
 };
 
 function timeAgo(iso) {
@@ -291,7 +292,7 @@ export default function Dashboard() {
 
   const fetchPositions = async () => {
     try {
-      const res = await axios.get(`${APP_CONFIG.BACKEND_URL}/trade/positions`);
+      const res = await axios.get(`${APP_CONFIG.API_URL}/trade/positions`);
       setPositions(res.data);
     } catch (err) { console.error(err); }
   };
@@ -300,8 +301,8 @@ export default function Dashboard() {
     const fetchInitial = async () => {
       try {
         const [wRes, pRes] = await Promise.all([
-          axios.get(`${APP_CONFIG.BACKEND_URL}/watchlist/`),
-          axios.get(`${APP_CONFIG.BACKEND_URL}/trade/positions`)
+          axios.get(`${APP_CONFIG.API_URL}/watchlist/`),
+          axios.get(`${APP_CONFIG.API_URL}/trade/positions`)
         ]);
         setWatchlist(wRes.data);
         setPositions(pRes.data);
@@ -325,7 +326,7 @@ export default function Dashboard() {
     const fetchHistory = async () => {
         try {
             const { p, i } = rangeMap[selectedRange];
-            const res = await axios.get(`${APP_CONFIG.BACKEND_URL}/market/history/${selectedSymbol}?period=${p}&interval=${i}`);
+            const res = await axios.get(`${APP_CONFIG.API_URL}/market/history/${selectedSymbol}?period=${p}&interval=${i}`);
             setChartData(res.data);
         } catch(e) { console.error(e); }
     };
@@ -334,7 +335,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const connect = () => {
-      const ws = new WebSocket(`${APP_CONFIG.BACKEND_URL.replace("http", "ws")}/ws`);
+      const ws = new WebSocket(APP_CONFIG.WS_URL);
       wsRef.current = ws;
       ws.onopen = () => console.log("WS Connected");
       ws.onmessage = (e) => {

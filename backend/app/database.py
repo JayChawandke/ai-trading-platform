@@ -1,16 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-import os
+from .core.config import settings
 
-# Base directory relative to this file (backend/app/database.py -> backend)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "trading.db").replace("\\", "/")
-
-database_url = os.getenv("DATABASE_URL")
-if not database_url:
-    # Use absolute sqlite path with forward slashes
-    database_url = f"sqlite:///{DB_PATH}"
+database_url = settings.DATABASE_URL
+if "sqlite" in database_url:
     connect_args = {"check_same_thread": False}
 else:
     connect_args = {}
