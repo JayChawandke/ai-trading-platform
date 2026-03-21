@@ -7,7 +7,5 @@ joblib
 apscheduler
 torch
 scikit-learn
-joblib
-pandas_ta
+pandas-ta
 xgboost
-apscheduler
