@@ -191,12 +191,20 @@ def format_signal(prob_up: float, features: dict, symbol: str) -> dict:
 @app.get("/predict/{symbol}")
 def predict(symbol: str):
     try:
-        # Improved symbol mapping for Indian stocks
-        indian_stocks = ["TATAELXSI", "TATAPOWER", "SBIN", "ICICIBANK", "RELIANCE", "TCS", "INFY", "HDFCBANK", "BAJAJ-AUTO", "TATAMOTORS", "BHARTIARTL"]
-        yf_symbol = symbol + ".NS" if symbol in indian_stocks or symbol.startswith("^NSE") or symbol == "^BSESN" else symbol
+        # Standardize symbol logic (similar to backend utils)
+        s = symbol.upper().strip()
+        us_stocks = ["AAPL", "NVDA", "TSLA", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "AMD", "INTC", "PYPL", "ADBE", "BA", "DIS", "SPY", "QQQ"]
+        
+        if s.startswith("^") or s in us_stocks or "." in s:
+            yf_symbol = s
+        elif s.isdigit():
+            yf_symbol = f"{s}.BO"
+        else:
+            yf_symbol = f"{s}.NS"
+
         df = yf.download(yf_symbol, period="200d", progress=False)
         if df.empty or len(df) < 100:
-            return {"symbol": symbol, "prediction": "HOLD", "confidence": 50, "headline": "No Data"}
+            return {"symbol": symbol, "prediction": "HOLD", "confidence": 50, "headline": "No Data", "why": [f"Insufficient history for {yf_symbol}"]}
             
         feat_df = compute_features(df)
         last_row = feat_df.iloc[-1].to_dict()

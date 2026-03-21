@@ -280,6 +280,9 @@ export default function Dashboard() {
   const [pulse, setPulse] = useState(false);
   const [orderModal, setOrderModal] = useState({ show: false, symbol: '', side: '', ltp: 0 });
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const wsRef = useRef(null);
 
   const rangeMap = {
@@ -332,6 +335,42 @@ export default function Dashboard() {
     };
     fetchHistory();
   }, [selectedSymbol, selectedRange]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    setSearchLoading(true);
+    setSearchError("");
+    try {
+      const res = await axios.get(`${APP_CONFIG.API_URL}/market/price/${searchQuery.trim().toUpperCase()}`);
+      if (res.data.error) {
+        setSearchError("Symbol not found");
+      } else {
+        const foundSymbol = res.data.symbol;
+        if (!watchlist.find(s => s.symbol === foundSymbol)) {
+          // If not in watchlist, add a temporary item to marketData so it can be selected
+          setMarketData(p => ({
+            ...p,
+            [foundSymbol]: { ltp: res.data.price, symbol: foundSymbol, chg: 0, chg_pct: 0 }
+          }));
+        }
+        setSelectedSymbol(foundSymbol);
+        setSearchQuery("");
+      }
+    } catch (err) {
+      setSearchError("Search failed. Try again.");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleAddToWatchlist = async (sym) => {
+    try {
+      await axios.post(`${APP_CONFIG.API_URL}/watchlist/`, { symbol: sym });
+      const wRes = await axios.get(`${APP_CONFIG.API_URL}/watchlist/`);
+      setWatchlist(wRes.data);
+    } catch (err) { console.error("Failed to add to watchlist", err); }
+  };
 
   useEffect(() => {
     const connect = () => {
@@ -420,6 +459,29 @@ export default function Dashboard() {
             <div style={{width:30,height:30,borderRadius:8,background:"linear-gradient(135deg,#0ea5e9,#00ff88)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:"#050c1a"}}>AI</div>
             <span style={{fontSize:16,fontWeight:800,color:"#f1f5f9"}}>Jay Intel</span>
           </div>
+          <form onSubmit={handleSearch} style={{ marginLeft: 20, position: 'relative' }}>
+            <input 
+              type="text" 
+              placeholder="Search NSE/BSE/US stocks..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                color: '#f1f5f9',
+                fontSize: '0.9rem',
+                width: '260px',
+                outline: 'none',
+                transition: 'all 0.2s',
+                borderBottom: searchError ? '2px solid #ef4444' : '1px solid rgba(255,255,255,0.1)'
+              }}
+              onFocus={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
+              onBlur={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+            />
+            {searchLoading && <div style={{ position: 'absolute', right: 10, top: 8, fontSize: '0.7rem', color: '#64748b' }}>...</div>}
+          </form>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20}}>
             <div style={{display:"flex",gap:4,background:"rgba(255,255,255,0.03)",padding:4,borderRadius:8}}>
@@ -452,15 +514,39 @@ export default function Dashboard() {
                 </div>
                 <div>
                    {selectedSymbol && (
-                       <Detail 
-                         aiSignal={enrichedSignal} 
-                         mData={marketData[selectedSymbol]} 
-                         chartData={chartData} 
-                         onTrade={(side) => handleTrade(selectedSymbol, side)} 
-                         symbol={selectedSymbol}
-                         selectedRange={selectedRange}
-                         onRangeChange={setSelectedRange}
-                       />
+                       <>
+                        {!watchlist.find(s => s.symbol === selectedSymbol) && (
+                          <div style={{ 
+                            background: 'rgba(14, 165, 233, 0.1)', 
+                            border: '1px solid rgba(14, 165, 233, 0.2)', 
+                            borderRadius: '12px', 
+                            padding: '12px 24px', 
+                            marginBottom: '20px', 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center' 
+                          }}>
+                            <span style={{ fontSize: '0.9rem', color: '#7dd3fc' }}>Found <b>{selectedSymbol}</b>. Not in your watchlist.</span>
+                            <button 
+                              onClick={() => handleAddToWatchlist(selectedSymbol)}
+                              style={{ 
+                                background: '#0ea5e9', border: 'none', borderRadius: '6px', 
+                                padding: '6px 14px', color: '#fff', fontWeight: '700', 
+                                fontSize: '0.8rem', cursor: 'pointer' 
+                              }}
+                            >+ ADD TO WATCHLIST</button>
+                          </div>
+                        )}
+                        <Detail 
+                          aiSignal={enrichedSignal} 
+                          mData={marketData[selectedSymbol]} 
+                          chartData={chartData} 
+                          onTrade={(side) => handleTrade(selectedSymbol, side)} 
+                          symbol={selectedSymbol}
+                          selectedRange={selectedRange}
+                          onRangeChange={setSelectedRange}
+                        />
+                       </>
                    )}
                 </div>
             </div>

@@ -9,11 +9,26 @@ router = APIRouter()
 def get_price(symbol:str):
     query_sym = get_query_symbol(symbol)
     data = yf.Ticker(query_sym)
+    # Use fast_info if available or history for validation
     hist = data.history(period="1d")
     if hist.empty:
-         return {"symbol":symbol,"price":0.0}
+         return {"symbol": symbol, "price": 0.0, "error": "Symbol not found"}
+    
     price = float(hist["Close"].iloc[-1])
-    return {"symbol":symbol,"price":price}
+    # Try to get a clean name
+    name = symbol
+    try:
+        info = data.info
+        name = info.get("shortName", info.get("longName", symbol))
+    except: pass
+
+    return {
+        "symbol": symbol, 
+        "query_symbol": query_sym,
+        "price": price, 
+        "name": name,
+        "exchange": "UNKNOWN" # Simplified for now
+    }
 
 @router.get("/history/{symbol}")
 def get_history(symbol: str, period: str = "1mo", interval: str = "1d"):
